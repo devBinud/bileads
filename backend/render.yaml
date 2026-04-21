@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: bileads-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: FIREBASE_DB_SECRET
+        sync: false
