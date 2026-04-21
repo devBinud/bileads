@@ -1,8 +1,16 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// Wakes up the backend if it's sleeping (Render free tier cold start)
+async function warmUp() {
+  try {
+    await fetch(`${BASE_URL}/health`, { signal: AbortSignal.timeout(60000) });
+  } catch {}
+}
+
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(60000), // 60s timeout to handle cold starts
     ...options,
   });
   if (!res.ok) {
@@ -11,6 +19,8 @@ async function request(path, options = {}) {
   }
   return res.json();
 }
+
+export { warmUp };
 
 export const api = {
   /**

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { api } from '../api';
+import { api, warmUp } from '../api';
 import toast from 'react-hot-toast';
 import {
   Target, LogOut, RefreshCw, Flame, Globe, Users,
@@ -185,6 +185,7 @@ export default function Dashboard({ user }) {
   const fetchLeads = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
+      await warmUp(); // wake backend if sleeping
       const data = await api.getLeads();
       setLeads(data.leads || []);
     } catch {
