@@ -12,7 +12,31 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Debug: Log config in development
+if (import.meta.env.DEV) {
+  console.log('Firebase Config:', {
+    ...firebaseConfig,
+    apiKey: firebaseConfig.apiKey ? '***' : 'MISSING',
+  });
+}
+
+// Validate required fields
+const requiredFields = ['apiKey', 'authDomain', 'projectId', 'appId'];
+const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+
+if (missingFields.length > 0) {
+  console.error('Missing Firebase config fields:', missingFields);
+  throw new Error(`Firebase configuration incomplete. Missing: ${missingFields.join(', ')}`);
+}
+
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  throw error;
+}
 
 export const auth = getAuth(app);
 export const rtdb = getDatabase(app);
