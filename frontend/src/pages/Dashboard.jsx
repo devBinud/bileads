@@ -167,6 +167,7 @@ export default function Dashboard({ user }) {
   const [leads, setLeads]         = useState([]);
   const [stats, setStats]         = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [waking, setWaking]       = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [scraping, setScraping]   = useState(false);
 
@@ -185,13 +186,23 @@ export default function Dashboard({ user }) {
   const fetchLeads = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
+      setWaking(true);
       await warmUp(); // wake backend if sleeping
-      const data = await api.getLeads();
+      setWaking(false);
+      let data;
+      try {
+        data = await api.getLeads();
+      } catch {
+        // First attempt failed — wait 5s and retry once
+        await new Promise(r => setTimeout(r, 5000));
+        data = await api.getLeads();
+      }
       setLeads(data.leads || []);
     } catch {
       toast.error('Failed to load leads');
     } finally {
       setLoading(false);
+      setWaking(false);
     }
   }, []);
 
@@ -440,8 +451,12 @@ export default function Dashboard({ user }) {
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin absolute inset-0" />
               </div>
               <div className="text-center">
-                <p className="text-slate-600 font-medium text-sm">Loading leads...</p>
-                <p className="text-slate-400 text-xs mt-1">Fetching from database</p>
+                <p className="text-slate-600 font-medium text-sm">
+                  {waking ? 'Waking up server...' : 'Loading leads...'}
+                </p>
+                <p className="text-slate-400 text-xs mt-1">
+                  {waking ? 'First load may take ~30 seconds' : 'Fetching from database'}
+                </p>
               </div>
             </div>
           ) : filteredLeads.length === 0 ? (
